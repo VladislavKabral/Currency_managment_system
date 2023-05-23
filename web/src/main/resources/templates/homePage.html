@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Currency_management_system</title>
+</head>
+    <body>
+        <div class="choiceLabel">
+            <h2>Выберите необходимый функционал:</h2>
+        </div>
+        <div class="addRatesFunctional">
+            <form th:method="GET" th:action="@{/currency/addRates}">
+                <input type="submit" value="Добавить курсы валют в БД">
+            </form>
+        </div>
+        <div class="getRatesFunctional">
+            <form th:method="GET" th:action="@{/currency/getRates}">
+                <input type="submit" value="Получить все курсы по заданной валюте">
+            </form>
+        </div>
+    </body>
+</html>
