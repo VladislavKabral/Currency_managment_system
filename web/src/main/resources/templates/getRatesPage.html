@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en"  xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Get rates</title>
+</head>
+    <body>
+        <form th:method="POST" th:action="@{/currency/getCurrencyRates}" th:object="${currencyTypeDTO}">
+            <h2>Введите нужный тип валюты: </h2>
+            <input class="simpleInput" id="currencyType" type="text" th:field="*{currencyType}" placeholder="Валюта">
+            <input type="submit" value="Найти">
+        </form>
+    </body>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Add rates</title>
+</head>
+    <body>
+        <div class="addRates">
+            <form th:method="POST" th:action="@{/currency/addRates}" th:object="${searchCurrencyRate}">
+                <div class="addCurrencyType">
+                    <label class="label" for="currencyType">Валюта: </label>
+                    <input class="simpleInput" id="currencyType" type="text" th:field="*{currencyType}" placeholder="Валюта">
+                </div>
+                <div class="addCurrencyStartDate">
+                    <label class="label" for="startDate">Начальная дата: </label>
+                    <input class="simpleInput" id="startDate" type="text" th:field="*{startDate}" placeholder="Начальная дата">
+                </div>
+                <div class="addCurrencyEndDate">
+                    <label class="label" for="endDate">Конечная дата: </label>
+                    <input class="simpleInput" id="endDate" type="text" th:field="*{endDate}" placeholder="Конечная дата">
+                </div>
+                <input type="submit" value="Добавить курсы валюты в базу данных">
+            </form>
+        </div>
+    </body>
+</html>
