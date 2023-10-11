@@ -3,6 +3,7 @@ package by.fin.service.impl;
 import by.fin.module.CurrencyRatesRepository;
 import by.fin.module.dto.CurrencyRateDTO;
 import by.fin.module.entity.CurrencyRate;
+import by.fin.module.entity.Weekend;
 import by.fin.service.CurrencyRateService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,6 +20,8 @@ import java.util.*;
 public class CurrencyRatesServiceImpl implements CurrencyRateService {
 
     private final CurrencyRatesRepository currencyRatesRepository;
+
+    private final WeekendsServiceImpl weekendsService;
 
     private final RestTemplate restTemplate;
 
@@ -54,6 +57,8 @@ public class CurrencyRatesServiceImpl implements CurrencyRateService {
                 "&endDate=" +
                 endDate;
 
+        System.out.println(url);
+
         String json = restTemplate.getForObject(url, String.class);
         ObjectMapper mapper = new ObjectMapper();
         List<CurrencyRateDTO> currencyRateDTOList;
@@ -64,6 +69,9 @@ public class CurrencyRatesServiceImpl implements CurrencyRateService {
             currencyRate.setCurrencyDate(currencyRateDTO.getDate());
             currencyRate.setCurrencyType(currencyType);
             currencyRate.setCurrencyRate(currencyRateDTO.getCur_OfficialRate());
+
+            Weekend weekend = weekendsService.findByCalendarDate(currencyRateDTO.getDate());
+            currencyRate.setCurrencyIsDayOff(weekend.isDayOff());
 
             saveCurrencyRate(currencyRate);
         }

@@ -23,4 +23,7 @@ public class CurrencyRate {
 
     @Column(name = "currency_rate")
     private Double currencyRate;
+
+    @Column(name = "currency_is_day_off")
+    private boolean currencyIsDayOff;
 }
