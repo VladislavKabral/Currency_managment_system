@@ -5,6 +5,7 @@ import by.fin.module.dto.CurrencyRateDTO;
 import by.fin.module.entity.CurrencyRate;
 import by.fin.module.entity.Weekend;
 import by.fin.service.CurrencyRateService;
+import by.fin.service.WeekendService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ public class CurrencyRatesServiceImpl implements CurrencyRateService {
 
     private final CurrencyRatesRepository currencyRatesRepository;
 
-    private final WeekendsServiceImpl weekendsService;
+    private final WeekendService weekendsService;
 
     private final RestTemplate restTemplate;
 
@@ -56,8 +57,6 @@ public class CurrencyRatesServiceImpl implements CurrencyRateService {
                 startDate +
                 "&endDate=" +
                 endDate;
-
-        System.out.println(url);
 
         String json = restTemplate.getForObject(url, String.class);
         ObjectMapper mapper = new ObjectMapper();

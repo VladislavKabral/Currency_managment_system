@@ -18,7 +18,7 @@ public class WeekendsServiceImpl implements WeekendService {
 
     @Override
     public List<Weekend> findAll() {
-       return weekendsRepository.findAll();
+        return weekendsRepository.findAll();
     }
 
     @Override

@@ -16,6 +16,7 @@ public class CurrencyRate {
     private Long currencyId;
 
     @Column(name = "currency_date")
+    @Temporal(TemporalType.DATE)
     private Date currencyDate;
 
     @Column(name = "currency_type")
