@@ -14,4 +14,6 @@ public interface CurrencyRateService {
     List<CurrencyRateDTO> getCurrencyRatesFromAPI(String currencyType, String startDate, String endDate);
 
     void saveCurrencyRate(CurrencyRate currencyRate);
+
+    Double calculateAverageCurrencyRate(String currencyType, int monthNumber);
 }

@@ -1,5 +1,6 @@
 package by.fin.web.controller;
 
+import by.fin.module.dto.AverageCurrencyRateDTO;
 import by.fin.module.dto.CurrencyRateDTO;
 import by.fin.module.dto.SearchCurrencyRatesDTO;
 import by.fin.module.entity.CurrencyRate;
@@ -38,6 +39,15 @@ public class Currency {
         return currencyRatesService.getCurrencyRatesFromAPI(searchCurrencyRatesDTO.getCurrencyType(),
                 searchCurrencyRatesDTO.getStartDate(),
                 searchCurrencyRatesDTO.getEndDate());
+    }
+
+    @GetMapping("/averageCurrencyRate/{currencyType}/{monthNumber}")
+    public AverageCurrencyRateDTO getAverageCurrencyRate(@PathVariable String currencyType, @PathVariable int monthNumber) {
+        AverageCurrencyRateDTO averageCurrencyRateDTO = new AverageCurrencyRateDTO();
+
+        averageCurrencyRateDTO.setRate(currencyRatesService.calculateAverageCurrencyRate(currencyType, monthNumber));
+
+        return averageCurrencyRateDTO;
     }
 
     private CurrencyRateDTO convertToCurrencyRateDTO(CurrencyRate currencyRate) {

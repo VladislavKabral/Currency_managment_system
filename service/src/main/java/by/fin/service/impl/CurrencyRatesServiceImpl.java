@@ -81,4 +81,32 @@ public class CurrencyRatesServiceImpl implements CurrencyRateService {
 
         return currencyRateDTOList;
     }
+
+    private List<CurrencyRate> sortCurrencyRates(List<CurrencyRate> currencyRates, int monthNumber) {
+        List<CurrencyRate> sortedCurrencyRates = new ArrayList<>();
+
+        for (CurrencyRate currencyRate: currencyRates) {
+            if (currencyRate.getCurrencyDate().getMonth() == monthNumber) {
+                sortedCurrencyRates.add(currencyRate);
+            }
+        }
+
+        return sortedCurrencyRates;
+    }
+
+    public Double calculateAverageCurrencyRate(String currencyType, int monthNumber) {
+        List<CurrencyRate> currencyRates = findByCurrencyRateByCurrencyType(currencyType);
+        List<CurrencyRate> sortedCurrencyRates = sortCurrencyRates(currencyRates, monthNumber - 1);
+
+        double averageCurrencyRate = 1.0;
+        int daysCount = 0;
+        for (CurrencyRate sortedCurrencyRate : sortedCurrencyRates) {
+            if (!sortedCurrencyRate.isCurrencyIsDayOff()) {
+                daysCount++;
+                averageCurrencyRate *= sortedCurrencyRate.getCurrencyRate();
+            }
+        }
+
+        return Math.pow(averageCurrencyRate, 1.0 / daysCount);
+    }
 }
