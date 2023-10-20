@@ -50,7 +50,7 @@ public class CurrencyRatesServiceImpl implements CurrencyRateService {
         currencyRatesRepository.save(currencyRate);
     }
 
-    public List<CurrencyRateDTO> getCurrencyRatesFromAPI(String currencyType, String startDate, String endDate) throws JsonProcessingException {
+    public List<CurrencyRateDTO> getCurrencyRatesFromAPI(String currencyType, String startDate, String endDate) {
         String url = "https://api.nbrb.by/ExRates/Rates/Dynamics/" +
                 currencyTypes.get(currencyType) +
                 "?startDate=" +
@@ -60,16 +60,20 @@ public class CurrencyRatesServiceImpl implements CurrencyRateService {
 
         String json = restTemplate.getForObject(url, String.class);
         ObjectMapper mapper = new ObjectMapper();
-        List<CurrencyRateDTO> currencyRateDTOList;
-        currencyRateDTOList = Arrays.asList(mapper.readValue(json, CurrencyRateDTO[].class));
+        List<CurrencyRateDTO> currencyRateDTOList = new ArrayList<>();
+        try {
+            currencyRateDTOList = Arrays.asList(mapper.readValue(json, CurrencyRateDTO[].class));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
 
         for (CurrencyRateDTO currencyRateDTO: currencyRateDTOList) {
             CurrencyRate currencyRate = new CurrencyRate();
-            currencyRate.setCurrencyDate(currencyRateDTO.getDate());
+            currencyRate.setCurrencyDate(currencyRateDTO.getCurrencyDate());
             currencyRate.setCurrencyType(currencyType);
-            currencyRate.setCurrencyRate(currencyRateDTO.getCur_OfficialRate());
+            currencyRate.setCurrencyRate(currencyRateDTO.getCurrencyRate());
 
-            Weekend weekend = weekendsService.findByCalendarDate(currencyRateDTO.getDate());
+            Weekend weekend = weekendsService.findByCalendarDate(currencyRateDTO.getCurrencyDate());
             currencyRate.setCurrencyIsDayOff(weekend.isDayOff());
 
             saveCurrencyRate(currencyRate);

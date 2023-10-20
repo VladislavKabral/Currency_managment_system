@@ -8,12 +8,12 @@ import java.util.Date;
 @Data
 public class CurrencyRateDTO {
 
-    @JsonProperty("Cur_ID")
-    private Long Cur_ID;
+    @JsonProperty("currency_rate_id")
+    private Long currencyId;
 
-    @JsonProperty("Date")
-    private Date Date;
+    @JsonProperty("currency_date")
+    private Date currencyDate;
 
-    @JsonProperty("Cur_OfficialRate")
-    private Double Cur_OfficialRate;
+    @JsonProperty("currency_rate")
+    private Double currencyRate;
 }
