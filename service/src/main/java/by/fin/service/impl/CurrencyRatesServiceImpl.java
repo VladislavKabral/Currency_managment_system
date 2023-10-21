@@ -4,8 +4,10 @@ import by.fin.module.CurrencyRatesRepository;
 import by.fin.module.dto.CurrencyRateDTO;
 import by.fin.module.entity.CurrencyRate;
 import by.fin.module.entity.Weekend;
+import by.fin.module.exception.DateException;
 import by.fin.service.CurrencyRateService;
 import by.fin.service.WeekendService;
+import by.fin.util.validator.impl.DateValidatorImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,8 @@ public class CurrencyRatesServiceImpl implements CurrencyRateService {
     private final WeekendService weekendsService;
 
     private final RestTemplate restTemplate;
+
+    private final DateValidatorImpl dateValidator;
 
     private final Map<String, Integer> currencyTypes = new HashMap<>() {{
         put("USD", 145);
@@ -50,7 +54,17 @@ public class CurrencyRatesServiceImpl implements CurrencyRateService {
         currencyRatesRepository.save(currencyRate);
     }
 
-    public List<CurrencyRateDTO> getCurrencyRatesFromAPI(String currencyType, String startDate, String endDate) {
+    public List<CurrencyRateDTO> getCurrencyRatesFromAPI(String currencyType, String startDate, String endDate)
+            throws DateException {
+
+        if (!dateValidator.validate(startDate)) {
+            throw new DateException("Invalid start date format");
+        }
+
+        if (!dateValidator.validate(endDate)) {
+            throw new DateException("Invalid end date format");
+        }
+
         String url = "https://api.nbrb.by/ExRates/Rates/Dynamics/" +
                 currencyTypes.get(currencyType) +
                 "?startDate=" +
