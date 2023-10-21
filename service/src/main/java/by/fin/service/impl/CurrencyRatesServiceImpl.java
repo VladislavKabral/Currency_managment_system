@@ -4,9 +4,11 @@ import by.fin.module.CurrencyRatesRepository;
 import by.fin.module.dto.CurrencyRateDTO;
 import by.fin.module.entity.CurrencyRate;
 import by.fin.module.entity.Weekend;
+import by.fin.module.exception.CurrencyRateException;
 import by.fin.module.exception.DateException;
 import by.fin.service.CurrencyRateService;
 import by.fin.service.WeekendService;
+import by.fin.util.validator.impl.CurrencyRateTypeValidatorImpl;
 import by.fin.util.validator.impl.DateValidatorImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,6 +32,8 @@ public class CurrencyRatesServiceImpl implements CurrencyRateService {
 
     private final DateValidatorImpl dateValidator;
 
+    private final CurrencyRateTypeValidatorImpl currencyRateTypeValidator;
+
     private final Map<String, Integer> currencyTypes = new HashMap<>() {{
         put("USD", 145);
         put("EUR", 19);
@@ -45,8 +49,16 @@ public class CurrencyRatesServiceImpl implements CurrencyRateService {
     }
 
     @Override
-    public List<CurrencyRate> findByCurrencyRateByCurrencyType(String currencyType) {
+    public List<CurrencyRate> findByCurrencyRateByCurrencyType(String currencyType) throws CurrencyRateException {
+        if (!currencyRateTypeValidator.validate(currencyType)) {
+            throw new CurrencyRateException("Invalid currency type");
+        }
+
         return currencyRatesRepository.findByCurrencyType(currencyType);
+    }
+
+    public CurrencyRate findByCurrencyDateAndCurrencyType(Date date, String type) {
+        return currencyRatesRepository.findByCurrencyDateAndCurrencyType(date, type);
     }
 
     @Override
@@ -55,7 +67,11 @@ public class CurrencyRatesServiceImpl implements CurrencyRateService {
     }
 
     public List<CurrencyRateDTO> getCurrencyRatesFromAPI(String currencyType, String startDate, String endDate)
-            throws DateException {
+            throws DateException, CurrencyRateException {
+
+        if (!currencyRateTypeValidator.validate(currencyType)) {
+            throw new CurrencyRateException("Invalid currency type");
+        }
 
         if (!dateValidator.validate(startDate)) {
             throw new DateException("Invalid start date format");
@@ -82,15 +98,17 @@ public class CurrencyRatesServiceImpl implements CurrencyRateService {
         }
 
         for (CurrencyRateDTO currencyRateDTO: currencyRateDTOList) {
-            CurrencyRate currencyRate = new CurrencyRate();
-            currencyRate.setCurrencyDate(currencyRateDTO.getCurrencyDate());
-            currencyRate.setCurrencyType(currencyType);
-            currencyRate.setCurrencyRate(currencyRateDTO.getCurrencyRate());
+            if (findByCurrencyDateAndCurrencyType(currencyRateDTO.getCurrencyDate(), currencyType) == null) {
+                CurrencyRate currencyRate = new CurrencyRate();
+                currencyRate.setCurrencyDate(currencyRateDTO.getCurrencyDate());
+                currencyRate.setCurrencyType(currencyType);
+                currencyRate.setCurrencyRate(currencyRateDTO.getCurrencyRate());
 
-            Weekend weekend = weekendsService.findByCalendarDate(currencyRateDTO.getCurrencyDate());
-            currencyRate.setCurrencyIsDayOff(weekend.isDayOff());
+                Weekend weekend = weekendsService.findByCalendarDate(currencyRateDTO.getCurrencyDate());
+                currencyRate.setCurrencyIsDayOff(weekend.isDayOff());
 
-            saveCurrencyRate(currencyRate);
+                saveCurrencyRate(currencyRate);
+            }
         }
 
         return currencyRateDTOList;
@@ -108,7 +126,7 @@ public class CurrencyRatesServiceImpl implements CurrencyRateService {
         return sortedCurrencyRates;
     }
 
-    public Double calculateAverageCurrencyRate(String currencyType, int monthNumber) {
+    public Double calculateAverageCurrencyRate(String currencyType, int monthNumber) throws CurrencyRateException {
         List<CurrencyRate> currencyRates = findByCurrencyRateByCurrencyType(currencyType);
         List<CurrencyRate> sortedCurrencyRates = sortCurrencyRates(currencyRates, monthNumber - 1);
 

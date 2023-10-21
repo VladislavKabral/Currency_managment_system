@@ -6,6 +6,7 @@ import by.fin.module.dto.ErrorResponseDTO;
 import by.fin.module.dto.SearchCurrencyRatesDTO;
 import by.fin.module.entity.CurrencyRate;
 import by.fin.module.entity.ErrorResponse;
+import by.fin.module.exception.CurrencyRateException;
 import by.fin.module.exception.DateException;
 import by.fin.service.CurrencyRateService;
 import org.modelmapper.ModelMapper;
@@ -22,6 +23,10 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/currency")
 public class Currency {
 
+    private static final int MAX_MONTH_NUMBER = 12;
+
+    private static final int MIN_MONTH_NUMBER = 1;
+
     private final CurrencyRateService currencyRatesService;
 
     private final ModelMapper modelMapper;
@@ -33,7 +38,8 @@ public class Currency {
     }
 
     @GetMapping("/{currencyType}")
-    public ResponseEntity<List<CurrencyRateDTO>> getCurrencyByType(@PathVariable("currencyType") String currencyType) {
+    public ResponseEntity<List<CurrencyRateDTO>> getCurrencyByType(@PathVariable("currencyType") String currencyType)
+            throws CurrencyRateException {
         List<CurrencyRateDTO> currencyRateDTOS = currencyRatesService.findByCurrencyRateByCurrencyType(currencyType)
             .stream()
             .map(this::convertToCurrencyRateDTO)
@@ -44,7 +50,7 @@ public class Currency {
 
     @PostMapping("/addCurrencyToDB")
     public ResponseEntity<List<CurrencyRateDTO>> addCurrencyToDB(@RequestBody SearchCurrencyRatesDTO searchCurrencyRatesDTO)
-            throws DateException {
+            throws DateException, CurrencyRateException {
         List<CurrencyRateDTO> currencyRateDTOS = currencyRatesService.getCurrencyRatesFromAPI(
             searchCurrencyRatesDTO.getCurrencyType(),
             searchCurrencyRatesDTO.getStartDate(),
@@ -55,7 +61,11 @@ public class Currency {
 
     @GetMapping("/averageCurrencyRate/{currencyType}/{monthNumber}")
     public ResponseEntity<AverageCurrencyRateDTO> getAverageCurrencyRate(@PathVariable String currencyType,
-                                                                         @PathVariable int monthNumber) {
+                                                     @PathVariable int monthNumber) throws CurrencyRateException {
+        if ((monthNumber > MAX_MONTH_NUMBER) || (monthNumber < MIN_MONTH_NUMBER)) {
+            throw new CurrencyRateException("Invalid month number");
+        }
+
         AverageCurrencyRateDTO averageCurrencyRateDTO = new AverageCurrencyRateDTO();
 
         averageCurrencyRateDTO.setRate(currencyRatesService.calculateAverageCurrencyRate(currencyType, monthNumber));
