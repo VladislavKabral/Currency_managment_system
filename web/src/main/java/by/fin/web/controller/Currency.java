@@ -59,9 +59,11 @@ public class Currency {
         return new ResponseEntity<>(currencyRateDTOS, HttpStatus.OK);
     }
 
-    @GetMapping("/averageCurrencyRate/{currencyType}/{monthNumber}")
-    public ResponseEntity<AverageCurrencyRateDTO> getAverageCurrencyRate(@PathVariable String currencyType,
-                                                     @PathVariable int monthNumber) throws CurrencyRateException {
+    @GetMapping("/averageCurrencyRate")
+    public ResponseEntity<AverageCurrencyRateDTO> getAverageCurrencyRate(
+            @RequestParam("currencyType") String currencyType,
+            @RequestParam("monthNumber") int monthNumber) throws CurrencyRateException {
+
         if ((monthNumber > MAX_MONTH_NUMBER) || (monthNumber < MIN_MONTH_NUMBER)) {
             throw new CurrencyRateException("Invalid month number");
         }
