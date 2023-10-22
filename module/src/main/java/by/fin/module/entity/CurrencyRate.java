@@ -16,6 +16,7 @@ public class CurrencyRate {
     private Long currencyId;
 
     @Column(name = "currency_date")
+    @Temporal(TemporalType.DATE)
     private Date currencyDate;
 
     @Column(name = "currency_type")
@@ -23,4 +24,7 @@ public class CurrencyRate {
 
     @Column(name = "currency_rate")
     private Double currencyRate;
+
+    @Column(name = "currency_is_day_off")
+    private boolean currencyIsDayOff;
 }

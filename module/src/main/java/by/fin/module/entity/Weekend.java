@@ -21,6 +21,7 @@ public class Weekend {
     private Long weekendId;
 
     @Column(name = "calendar_date")
+    @Temporal(TemporalType.DATE)
     private Date calendarDate;
 
     @Column(name = "is_day_off")

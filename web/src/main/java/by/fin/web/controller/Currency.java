@@ -1,67 +1,92 @@
 package by.fin.web.controller;
 
+import by.fin.module.dto.AverageCurrencyRateDTO;
 import by.fin.module.dto.CurrencyRateDTO;
-import by.fin.module.dto.CurrencyTypeDTO;
+import by.fin.module.dto.ErrorResponseDTO;
 import by.fin.module.dto.SearchCurrencyRatesDTO;
 import by.fin.module.entity.CurrencyRate;
-import by.fin.service.impl.CurrencyRatesServiceImpl;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import jakarta.validation.Valid;
+import by.fin.module.entity.ErrorResponse;
+import by.fin.module.exception.CurrencyRateException;
+import by.fin.module.exception.DateException;
+import by.fin.service.CurrencyRateService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
-@Controller
-@RequestMapping("/currency")
+@RestController
+@RequestMapping("/api/currency")
 public class Currency {
 
-    private final CurrencyRatesServiceImpl currencyRatesService;
+    private static final int MAX_MONTH_NUMBER = 12;
+
+    private static final int MIN_MONTH_NUMBER = 1;
+
+    private final CurrencyRateService currencyRatesService;
+
+    private final ModelMapper modelMapper;
 
     @Autowired
-    public Currency(CurrencyRatesServiceImpl currencyRatesService) {
-        this.currencyRatesService = currencyRatesService;
+    public Currency(CurrencyRateService currencyRateService, ModelMapper modelMapper) {
+        this.currencyRatesService = currencyRateService;
+        this.modelMapper = modelMapper;
     }
 
-    @GetMapping("/addRates")
-    public String addRatesPage(@ModelAttribute("searchCurrencyRate") SearchCurrencyRatesDTO searchCurrencyRatesDTO) {
-        return "addRatesPage";
+    @GetMapping("/{currencyType}")
+    public ResponseEntity<List<CurrencyRateDTO>> getCurrencyByType(@PathVariable("currencyType") String currencyType)
+            throws CurrencyRateException {
+        List<CurrencyRateDTO> currencyRateDTOS = currencyRatesService.findByCurrencyRateByCurrencyType(currencyType)
+            .stream()
+            .map(this::convertToCurrencyRateDTO)
+            .collect(Collectors.toList());
+
+        return new ResponseEntity<>(currencyRateDTOS, HttpStatus.OK);
     }
 
-    @GetMapping("/getRates")
-    public String getRatesPage(@ModelAttribute("currencyTypeDTO") CurrencyTypeDTO currencyTypeDTO) {
-        return "getRatesPage";
+    @PostMapping("/addCurrencyToDB")
+    public ResponseEntity<List<CurrencyRateDTO>> addCurrencyToDB(@RequestBody SearchCurrencyRatesDTO searchCurrencyRatesDTO)
+            throws DateException, CurrencyRateException {
+        List<CurrencyRateDTO> currencyRateDTOS = currencyRatesService.getCurrencyRatesFromAPI(
+            searchCurrencyRatesDTO.getCurrencyType(),
+            searchCurrencyRatesDTO.getStartDate(),
+            searchCurrencyRatesDTO.getEndDate());
+
+        return new ResponseEntity<>(currencyRateDTOS, HttpStatus.OK);
     }
 
-    @PostMapping("/getCurrencyRates")
-    public String getRates(@ModelAttribute("currencyTypeDTO") CurrencyTypeDTO currencyTypeDTO, Model model) {
-        List<CurrencyRate> currencyRates = currencyRatesService
-                .findByCurrencyRateByCurrencyType(currencyTypeDTO.getCurrencyType());
+    @GetMapping("/averageCurrencyRate")
+    public ResponseEntity<AverageCurrencyRateDTO> getAverageCurrencyRate(
+            @RequestParam("currencyType") String currencyType,
+            @RequestParam("monthNumber") int monthNumber) throws CurrencyRateException {
 
-        model.addAttribute("rates", currencyRates);
+        if ((monthNumber > MAX_MONTH_NUMBER) || (monthNumber < MIN_MONTH_NUMBER)) {
+            throw new CurrencyRateException("Invalid month number");
+        }
 
-        return "redirect:/currency/getAddedRates";
+        AverageCurrencyRateDTO averageCurrencyRateDTO = new AverageCurrencyRateDTO();
+
+        averageCurrencyRateDTO.setRate(currencyRatesService.calculateAverageCurrencyRate(currencyType, monthNumber));
+
+        return new ResponseEntity<>(averageCurrencyRateDTO, HttpStatus.OK);
     }
 
-    @GetMapping("/getAddedRates")
-    public String getAddedCurrencyRatesPage(@ModelAttribute("rates") List<CurrencyRate> currencyRates) {
-        return "addedCurrencyRates";
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> handleExceptionResponse(Exception exception) {
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), LocalDateTime.now());
+
+        return new ResponseEntity<>(convertToErrorResponseDTO(errorResponse), HttpStatus.BAD_REQUEST);
     }
 
-    @PostMapping("/addRates")
-    public String addRates(@ModelAttribute("searchCurrencyRate") @Valid SearchCurrencyRatesDTO searchCurrencyRatesDTO,
-                           Model model) throws JsonProcessingException {
+    private CurrencyRateDTO convertToCurrencyRateDTO(CurrencyRate currencyRate) {
+        return modelMapper.map(currencyRate, CurrencyRateDTO.class);
+    }
 
-        List<CurrencyRateDTO> res = currencyRatesService.getCurrencyRatesFromAPI(searchCurrencyRatesDTO.getCurrencyType(),
-                searchCurrencyRatesDTO.getStartDate(), searchCurrencyRatesDTO.getEndDate());
-
-        model.addAttribute("addedCurrencyRates", res);
-
-        return "redirect:/";
+    private ErrorResponseDTO convertToErrorResponseDTO(ErrorResponse errorResponse) {
+        return modelMapper.map(errorResponse, ErrorResponseDTO.class);
     }
 }
